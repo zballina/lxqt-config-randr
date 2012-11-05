@@ -77,3 +77,5 @@ target_link_libraries(${PROJECT_NAME}
     ${QT_QTGUI_LIBRARY}
     ${X11_LIBRARIES}
 )
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
