@@ -6,4 +6,4 @@ Comment=Qt-based tool to configure the X output using the RandR 1.3/1.2 extensio
 Icon=preferences-desktop-display
 Exec=razorrandr
 Terminal=false
-Categories=Qt;System;
+Categories=Qt;Settings;
