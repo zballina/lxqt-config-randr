@@ -21,4 +21,8 @@ set(${PROJECTNAME}_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 
 subdirs(src)
 
+set(DESKTOP_FILES
+    razorxrandr.desktop
+)
+
 install(FILES ${DESKTOP_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
