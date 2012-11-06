@@ -1,4 +1,4 @@
-project(RazorRandr)
+project(RazorXRandr)
 cmake_minimum_required(VERSION 2.6)
 
 if (NOT CMAKE_BUILD_TYPE)

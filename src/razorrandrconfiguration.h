@@ -16,6 +16,7 @@ class RazorRandrConfiguration : public QDialog
 public:
     explicit RazorRandrConfiguration(QWidget *parent = 0);
     ~RazorRandrConfiguration();
+    void about();
 
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);

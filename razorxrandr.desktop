@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=RazorRandr
+Name=Razor XRandr
 Type=Application
 GenericName=Qt GUI interface to RandR extention
 Comment=Qt-based tool to configure the X output using the RandR 1.3/1.2 extension, based in KDE parts
 Icon=preferences-desktop-display
-Exec=RazorRandr
+Exec=razorxrandr
 Terminal=false
 Categories=Qt;Settings;

@@ -1,3 +1,5 @@
+#include <QtGui/QMessageBox>
+
 #include "razorrandrconfiguration.h"
 #include "ui_razorrandrconfiguration.h"
 
@@ -49,4 +51,14 @@ void RazorRandrConfiguration::on_buttonBox_clicked(QAbstractButton *button)
         mRandrConfig->load();
         updateButtons(false);
     }
+    else if(mUi->buttonBox->button(QDialogButtonBox::Help) == button)
+    {
+        about();
+    }
+}
+
+void RazorRandrConfiguration::about()
+{
+    QMessageBox about;
+    about.aboutQt(this);
 }

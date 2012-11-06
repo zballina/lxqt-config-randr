@@ -1,3 +1,4 @@
+set(EXE_NAME razorxrandr)
 find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
 find_package(X11 REQUIRED)
 
@@ -10,7 +11,7 @@ check_function_exists(XRRGetScreenSizeRange HAS_RANDR_1_2)
 check_function_exists(XRRGetScreenResourcesCurrent HAS_RANDR_1_3)
 
 configure_file(config-randr.h.cmake
-                ${CMAKE_CURRENT_BINARY_DIR}/config-randr.h )
+                ${CMAKE_CURRENT_BINARY_DIR}/config-randr.h)
 
 include_directories( ${X11_Xrandr_INCLUDE_PATH})
 
@@ -66,16 +67,16 @@ INCLUDE_DIRECTORIES(
     ${QT_INCLUDE_DIR}
     ${X11_Xrandr_INCLUDE_PATH}
 )
-add_executable(${PROJECT_NAME}
+add_executable(${EXE_NAME}
     ${RAZORRANDR_SOURCES}
     ${RAZORRANDR_UI}
     ${RAZORRANDR_MOC}
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${EXE_NAME}
     ${QT_QTCORE_LIBRARY}
     ${QT_QTGUI_LIBRARY}
     ${X11_LIBRARIES}
 )
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+install(TARGETS ${EXE_NAME} RUNTIME DESTINATION bin)
