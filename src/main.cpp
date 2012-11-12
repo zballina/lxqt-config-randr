@@ -23,12 +23,12 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication::setApplicationName("RazorXRandr");
-#ifdef RazorXRandr_VERSION
-    QApplication::setApplicationVersion(QString("%1").arg(RazorXRandr_VERSION));
+    QApplication::setApplicationName("razorxrandr");
+#ifdef STR_VERSION
+    QApplication::setApplicationVersion(QString("%1").arg(STR_VERSION));
 #endif
-    QApplication::setOrganizationDomain("www.hostingbroad.com");
-    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QApplication::setOrganizationDomain("razor");
+    QSettings::setDefaultFormat(QSettings::NativeFormat);
 
     QApplication a(argc, argv);
     RazorRandrConfiguration w;
