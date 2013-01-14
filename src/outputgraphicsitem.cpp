@@ -16,15 +16,15 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include "outputgraphicsitem.h"
-#include "outputconfig.h"
-#include "randr.h"
-
 #include <QtGui/QPen>
 #include <QtGui/QBrush>
 #include <QtGui/QFont>
 #include <QtGui/QGraphicsScene>
 #include <QtGui/QApplication>
+
+#include "outputconfig.h"
+#include "outputgraphicsitem.h"
+#include "randr.h"
 
 OutputGraphicsItem::OutputGraphicsItem(OutputConfig *config)
     : m_config( config )

@@ -27,18 +27,7 @@
 #include <QtGui/QPixmap>
 #include <config-randr.h>
 
-extern "C"
-{
-#include <X11/Xlib.h>
-#define INT8 _X11INT8
-#define INT32 _X11INT32
-#include <X11/Xproto.h>
-#undef INT8
-#undef INT32
 #include <X11/extensions/Xrandr.h>
-}
-
-#include <fixx11h.h>
 
 #ifdef HAS_RANDR_1_2
 class RandRScreen;

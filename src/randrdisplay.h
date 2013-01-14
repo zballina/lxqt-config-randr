@@ -24,7 +24,6 @@
 #include <QtGui/QWidget>
 #include <QtCore/QSettings>
 #include <X11/Xlib.h>
-#include <fixx11h.h>
 
 #include "randr.h"
 
