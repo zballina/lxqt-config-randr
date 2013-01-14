@@ -19,8 +19,8 @@
  */
 
 #include <QtGui/QIcon>
-#include "randr.h"
 #include "qtimerconfirmdialog.h"
+#include "randr.h"
 
 bool RandR::has_1_2 = true;
 bool RandR::has_1_3 = true;
