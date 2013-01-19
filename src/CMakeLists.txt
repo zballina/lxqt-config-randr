@@ -9,6 +9,7 @@ set(CMAKE_REQUIRED_INCLUDES ${X11_Xrandr_INCLUDE_PATH}/Xrandr.h)
 set(CMAKE_REQUIRED_LIBRARIES ${X11_Xrandr_LIB})
 check_function_exists(XRRGetScreenSizeRange HAS_RANDR_1_2)
 check_function_exists(XRRGetScreenResourcesCurrent HAS_RANDR_1_3)
+find_library(XRANDR_LIBRARY NAMES Xrandr)
 
 configure_file(config-randr.h.cmake
                 ${CMAKE_CURRENT_BINARY_DIR}/config-randr.h)
@@ -77,6 +78,7 @@ target_link_libraries(${EXE_NAME}
     ${QT_QTCORE_LIBRARY}
     ${QT_QTGUI_LIBRARY}
     ${X11_LIBRARIES}
+    ${XRANDR_LIBRARY}
 )
 
 install(TARGETS ${EXE_NAME} RUNTIME DESTINATION bin)
