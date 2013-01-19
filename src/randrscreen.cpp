@@ -17,13 +17,13 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <QtCore/QSettings>
+#include <QtGui/QAction>
+
 #include "randrscreen.h"
 #include "randrcrtc.h"
 #include "randroutput.h"
 #include "randrmode.h"
-
-#include <QtCore/QSettings>
-#include <QtGui/QAction>
 #include <X11/extensions/Xrandr.h>
 
 RandRScreen::RandRScreen(int screenIndex)
