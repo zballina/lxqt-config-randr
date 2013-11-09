@@ -23,15 +23,17 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication::setApplicationName("razorxrandr");
+    Q_INIT_RESOURCE(lxqtconfigrandr);
+
+    QApplication::setApplicationName("lxqt-config-randr");
 #ifdef STR_VERSION
     QApplication::setApplicationVersion(QString("%1").arg(STR_VERSION));
 #endif
-    QApplication::setOrganizationDomain("razor");
+    QApplication::setOrganizationDomain("lxqt");
     QSettings::setDefaultFormat(QSettings::NativeFormat);
 
     QApplication a(argc, argv);
-    RazorRandrConfiguration w;
+    LXQtRandrConfig w;
     w.show();
 
     return a.exec();

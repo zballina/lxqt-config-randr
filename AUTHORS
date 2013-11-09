@@ -1,0 +1,16 @@
+Upstream Author:
+    Francisco Ballina Sanchez <zballinita@gmail.com
+
+Copyright:
+    Copyright (C) 2012 Francisco Ballina Sanchez
+
+License: GPL-2 and LGPL-2.1+
+ The full text of the licenses can be found in the 'COPYING', 'COPYING.LIB' and 'COPYING.DOC' files.
+
+Based source code:
+ -KDE-workspace Randr of November, 2012
+   git://anongit.kde.org/kde-workspace.git
+ -QTerminal of November, 2012
+   https://github.com/qterminal/qterminal
+ -RazorQt of november, 2012
+   http://razor-qt.org

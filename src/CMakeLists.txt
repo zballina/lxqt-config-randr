@@ -1,4 +1,4 @@
-set(EXE_NAME razorxrandr)
+set(EXE_NAME lxqt-config-randr)
 find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
 find_package(X11 REQUIRED)
 
@@ -16,7 +16,7 @@ configure_file(config-randr.h.cmake
 
 include_directories( ${X11_Xrandr_INCLUDE_PATH})
 
-set(RAZORRANDR_SOURCES
+set(SOURCES_FILES
     randr.cpp
     randrmode.cpp
     randrscreen.cpp
@@ -34,7 +34,7 @@ set(RAZORRANDR_SOURCES
     main.cpp
 )
 
-set(RAZORRANDR_MOC_SOURCES
+set(MOC_SOURCES_FILES
     randrscreen.h
     randrcrtc.h
     randroutput.h
@@ -48,16 +48,19 @@ set(RAZORRANDR_MOC_SOURCES
     razorrandrconfiguration.h
 )
 
-set(RAZORRANDR_UI_SOURCES
+set(UI_SOURCES_FILES
     forms/outputconfigbase.ui
     forms/qtimerconfirmdialog.ui
     forms/randrconfigbase.ui
     forms/razorrandrconfiguration.ui
 )
 
-QT4_WRAP_UI(RAZORRANDR_UI ${RAZORRANDR_UI_SOURCES} )
-QT4_WRAP_CPP(RAZORRANDR_MOC ${RAZORRANDR_MOC_SOURCES} )
-#QT4_ADD_RESOURCES(RAZORRANDR_RCC ${RAZORRANDR_RCC_SRC} )
+set( RESOURCES_SRC_FILES
+    lxqtconfigrandr.qrc
+)
+QT4_WRAP_UI(UI_FILES ${UI_SOURCES_FILES} )
+QT4_WRAP_CPP(MOC_FILES ${MOC_SOURCES_FILES} )
+QT4_ADD_RESOURCES(RESOURCES_FILES ${RESOURCES_SRC_FILES} )
 #QT4_ADD_TRANSLATION(RAZORRANDR_QM ${RAZORRANDR_TS} )
 
 include(${QT_USE_FILE})
@@ -69,9 +72,10 @@ INCLUDE_DIRECTORIES(
     ${X11_Xrandr_INCLUDE_PATH}
 )
 add_executable(${EXE_NAME}
-    ${RAZORRANDR_SOURCES}
-    ${RAZORRANDR_UI}
-    ${RAZORRANDR_MOC}
+    ${SOURCES_FILES}
+    ${UI_FILES}
+    ${RESOURCES_FILES}
+    ${MOC_FILES}
 )
 
 target_link_libraries(${EXE_NAME}
