@@ -1,4 +1,5 @@
 #include <QtCore/QSettings>
+#include <QtCore/QFile>
 #include <QtCore/QDebug>
 #include "randrconfig.h"
 #include "randrdisplay.h"

@@ -17,6 +17,8 @@
  */
 
 #include <QtGui/QApplication>
+#include <QtCore/QSettings>
+#include <QtCore/QFile>
 #include <QtCore/QDebug>
 #include <getopt.h>
 #include <stdlib.h>
@@ -93,8 +95,19 @@ int main(int argc, char *argv[])
 
     if(startup)
     {
-        LoaderConfigLogin loader;
-        loader.execute();
+        QSettings config;
+        QFile fileconfig(config.fileName());
+        if(fileconfig.exists())
+        {
+            LoaderConfigLogin loader;
+            loader.execute();
+        }
+        else
+        {
+            qDebug() << "File config not exist: " << config.fileName();
+            qDebug() << "Not load config. Exit without change";
+        }
+
         exit(0);
     }
     else
