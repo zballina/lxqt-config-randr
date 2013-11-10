@@ -83,8 +83,8 @@ RandRDisplay::RandRDisplay()
 #endif
             m_legacyScreens.append(new LegacyRandRScreen(i));
     }
-
-#ifdef HAS_RANDR_1_2
+#if 0
+//#ifdef HAS_RANDR_1_2
     // check if we have more than one output, if no, revert to the legacy behavior
     if (RandR::has_1_2)
     {
@@ -383,7 +383,6 @@ void RandRDisplay::applyProposed(bool confirm)
                 }
                 else
                 {
-                    qDebug() << "applyProposed()";
                     s->applyProposed();
                 }
             }
