@@ -24,6 +24,7 @@
 #include <QtGui/QWidget>
 #include <QtCore/QSettings>
 #include <X11/Xlib.h>
+#include <config-randr.h>
 
 #include "randr.h"
 
@@ -45,10 +46,10 @@ public:
     int numScreens() const;
     LegacyRandRScreen* legacyScreen(int index);
     LegacyRandRScreen* currentLegacyScreen();
-//#ifdef HAS_RANDR_1_2
+#ifdef HAS_RANDR_1_2
     RandRScreen* screen(int index);
     RandRScreen* currentScreen();
-//#endif
+#endif
     void setCurrentScreen(int index);
     int	currentScreenIndex() const;
 
@@ -80,9 +81,9 @@ private:
     int	m_numScreens;
     int	m_currentScreenIndex;
     LegacyScreenList m_legacyScreens;
-//#ifdef HAS_RANDR_1_2
+#ifdef HAS_RANDR_1_2
     ScreenList m_screens;
-//#endif
+#endif
     bool m_valid;
     QString	m_errorCode;
     QString	m_version;

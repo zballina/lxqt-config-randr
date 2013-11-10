@@ -18,8 +18,62 @@
 
 #include <QtGui/QApplication>
 #include <QtCore/QDebug>
+#include <getopt.h>
+#include <stdlib.h>
 
 #include "razorrandrconfiguration.h"
+#include "loaderconfiglogin.h"
+
+#define out
+
+const char* const short_options = "vhs";
+
+const struct option long_options[] = {
+    {"version", 0, NULL, 'v'},
+    {"help",    0, NULL, 'h'},
+    {"startup", 0, NULL, 's'},
+    {NULL,      0, NULL,  0}
+};
+
+void print_usage_and_exit(int code)
+{
+    printf("LXQt Randr Configuration %s\n", STR_VERSION);
+    puts("Usage: lxqt-config-randr [OPTION]...\n");
+    puts("  -s,  --startup            Apply configuration from the saved settings");
+    puts("  -h,  --help               Print this help");
+    puts("  -v,  --version            Prints application version and exits");
+    puts("\nHomepage: <https://github.com/zballina/lxqt-config-randr>");
+    puts("Report bugs to <https://github.com/zballina/lxqt-config-randr>");
+    exit(code);
+}
+
+void print_version_and_exit(int code=0)
+{
+    printf("%s\n", STR_VERSION);
+    exit(code);
+}
+
+void parse_args(int argc, char* argv[], out bool& startup)
+{
+    int next_option;
+    startup = false;
+    do{
+        next_option = getopt_long(argc, argv, short_options, long_options, NULL);
+        switch(next_option)
+        {
+            case 'h':
+                print_usage_and_exit(0);
+            case 's':
+                startup = true;
+                break;
+            case '?':
+                print_usage_and_exit(1);
+            case 'v':
+                print_version_and_exit();
+        }
+    }
+    while(next_option != -1);
+}
 
 int main(int argc, char *argv[])
 {
@@ -33,8 +87,20 @@ int main(int argc, char *argv[])
     QSettings::setDefaultFormat(QSettings::NativeFormat);
 
     QApplication a(argc, argv);
-    LXQtRandrConfig w;
-    w.show();
 
+    bool startup;
+    parse_args(argc, argv, startup);
+
+    if(startup)
+    {
+        LoaderConfigLogin loader;
+        loader.execute();
+        exit(0);
+    }
+    else
+    {
+        LXQtRandrConfig w;
+        w.show();
+    }
     return a.exec();
 }

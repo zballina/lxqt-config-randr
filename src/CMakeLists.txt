@@ -31,6 +31,7 @@ set(SOURCES_FILES
     layoutmanager.cpp
     randrconfig.cpp
     razorrandrconfiguration.cpp
+    loaderconfiglogin.cpp
     main.cpp
 )
 
@@ -45,6 +46,7 @@ set(MOC_SOURCES_FILES
     outputconfig.h
     layoutmanager.h
     randrconfig.h
+#    loaderconfiglogin.h
     razorrandrconfiguration.h
 )
 

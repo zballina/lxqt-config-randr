@@ -29,7 +29,6 @@
 #include "randrscreen.h"
 #endif
 #include "legacyrandrscreen.h"
-#include <config-randr.h>
 
 RandRDisplay::RandRDisplay()
     : m_valid(true)
@@ -85,8 +84,7 @@ RandRDisplay::RandRDisplay()
             m_legacyScreens.append(new LegacyRandRScreen(i));
     }
 
-#if 0
-//#ifdef HAS_RANDR_1_2
+#ifdef HAS_RANDR_1_2
     // check if we have more than one output, if no, revert to the legacy behavior
     if (RandR::has_1_2)
     {
@@ -112,9 +110,9 @@ RandRDisplay::RandRDisplay()
 RandRDisplay::~RandRDisplay()
 {
         qDeleteAll(m_legacyScreens);
-//#ifdef HAS_RANDR_1_2
-//        qDeleteAll(m_screens);
-//#endif
+#ifdef HAS_RANDR_1_2
+        qDeleteAll(m_screens);
+#endif
 }
 
 bool RandRDisplay::isValid() const
@@ -265,7 +263,7 @@ LegacyRandRScreen* RandRDisplay::currentLegacyScreen()
     return m_legacyScreens.at(m_currentScreenIndex);
 }
 
-//#ifdef HAS_RANDR_1_2
+#ifdef HAS_RANDR_1_2
 RandRScreen* RandRDisplay::screen(int index)
 {
     return m_screens.at(index);
@@ -275,7 +273,7 @@ RandRScreen* RandRDisplay::currentScreen()
 {
     return m_screens.at(m_currentScreenIndex);
 }
-//#endif
+#endif
 
 bool RandRDisplay::loadDisplay(QSettings &config, bool loadScreens)
 {
@@ -380,9 +378,14 @@ void RandRDisplay::applyProposed(bool confirm)
         {
             if (s->proposedChanged()) {
                 if (confirm)
-                        s->applyProposedAndConfirm();
+                {
+                    s->applyProposedAndConfirm();
+                }
                 else
-                        s->applyProposed();
+                {
+                    qDebug() << "applyProposed()";
+                    s->applyProposed();
+                }
             }
         }
     }
