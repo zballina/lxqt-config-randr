@@ -99,8 +99,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        LXQtRandrConfig w;
-        w.show();
+        LXQtRandrConfig *w = new LXQtRandrConfig;
+        w->show();
     }
     return a.exec();
 }
