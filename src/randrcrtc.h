@@ -51,6 +51,7 @@ public:
     bool proposePosition(const QPoint &p);
     bool proposeRotation(int rotation);
     bool proposeRefreshRate(float rate);
+    bool proposeBrightness(float brightness);
 
     // applying stuff
     bool applyProposed();
@@ -63,6 +64,10 @@ public:
     OutputList connectedOutputs() const;
 
     ModeList modes() const;
+    
+    //Gamma vaules
+    float red, blue, green;
+    float brightness() const;
 
 signals:
     void crtcChanged(RRCrtc c, int changes);
@@ -74,15 +79,25 @@ private:
     QRect m_currentRect;
     float m_currentRate;
     int m_currentRotation;
+    float m_currentBrightness;
+    float m_currentRed;
+    float m_currentBlue;
+    float m_currentGreen;
 
 
     QRect m_originalRect;
     float m_originalRate;
     int m_originalRotation;
+    float m_originalBrightness;
 
     QRect m_proposedRect;
     float m_proposedRate;
     int m_proposedRotation;
+    
+    float m_proposedBrightness;
+    float m_proposedRed;
+    float m_proposedGreen;
+    float m_proposedBlue;
 
     OutputList m_connectedOutputs;
     OutputList m_possibleOutputs;

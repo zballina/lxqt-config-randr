@@ -57,6 +57,7 @@ public:
     QRect rect() const;
     float refreshRate(void) const;
     int rotation(void) const;
+    float brightness(void) const;
 
     static QString positionName(Relation position);
     RandROutput *output(void) const;
@@ -79,6 +80,7 @@ protected slots:
     void positionComboChanged(int item);
     void outputChanged(RROutput output, int changed);
 
+    void updateBrightness(void);
 signals:
     void updateView();
     void optionChanged();

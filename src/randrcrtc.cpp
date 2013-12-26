@@ -21,12 +21,14 @@
 #include "randrscreen.h"
 #include "randroutput.h"
 #include "randrmode.h"
+#include "randrgammainfo.h"
 
 RandRCrtc::RandRCrtc(RandRScreen *parent, RRCrtc id)
     : QObject(parent),
       m_currentRect(0, 0, 0, 0),
       m_originalRect(m_currentRect),
-      m_proposedRect(m_originalRect)
+      m_proposedRect(m_originalRect),
+      m_proposedBrightness(1.0)
 {
     m_screen = parent;
     Q_ASSERT(m_screen);
@@ -34,6 +36,7 @@ RandRCrtc::RandRCrtc(RandRScreen *parent, RRCrtc id)
     m_currentRotation = m_originalRotation = m_proposedRotation = RandR::Rotate0;
     m_currentRate = m_originalRate = m_proposedRate = 0;
     m_currentMode = 0;
+     m_originalBrightness = 1.0;
     m_rotations = RandR::Rotate0;
 
     m_id = id;
@@ -57,6 +60,11 @@ int RandRCrtc::rotations() const
 int RandRCrtc::rotation() const
 {
     return m_currentRotation;
+}
+
+float RandRCrtc::brightness() const
+{
+    return m_currentBrightness;
 }
 
 bool RandRCrtc::isValid(void) const
@@ -83,6 +91,16 @@ void RandRCrtc::loadSettings(bool notify)
     {
         m_currentRect = rect;
         changes |= RandR::ChangeRect;
+    }
+    
+    // Get red, blue, green and brightness
+    float _brightness;
+    get_gamma_info(QX11Info::display(), m_screen->resources(), m_id, &_brightness, &red, &blue, &green);
+    
+    if(_brightness != m_currentBrightness)
+    {
+        m_currentBrightness = _brightness;
+        changes |= RandR::ChangeBrightness;
     }
 
     // get all connected outputs
@@ -132,11 +150,38 @@ void RandRCrtc::loadSettings(bool notify)
         m_currentRate = m.refreshRate();
         changes |= RandR::ChangeRate;
     }
-
+    /*
+    if (m_currentBrightness != brightness())
+    {
+        m_currentBrightness = brightness();
+        changes |= RandR::ChangeBrightness;
+    }
+    */
+    if (m_currentRed != red)
+    {
+        m_currentRed = red;
+        changes |= RandR::ChangeBrightness;
+    }
+    
+    if (m_currentGreen != green)
+    {
+        m_currentGreen = green;
+        changes |= RandR::ChangeBrightness;
+    }
+    
+    if (m_currentBlue != blue)
+    {
+        m_currentBlue = blue;
+        changes |= RandR::ChangeBrightness;
+    }
     // just to make sure it gets initialized
     m_proposedRect = m_currentRect;
     m_proposedRotation = m_currentRotation;
     m_proposedRate = m_currentRate;
+    m_proposedBrightness = m_currentBrightness;
+    m_proposedRed = m_currentRed;
+    m_proposedGreen = m_currentGreen;
+    m_proposedBlue = m_currentBlue;
 
     // free the info
     XRRFreeCrtcInfo(info);
@@ -207,6 +252,7 @@ bool RandRCrtc::applyProposed()
     qDebug() << "       Proposed CRTC rect:" << m_proposedRect;
     qDebug() << "       Proposed rotation:" << m_proposedRotation;
     qDebug() << "       Proposed refresh rate:" << m_proposedRate;
+    qDebug() << "       Proposed brightness:" << m_proposedBrightness;
     qDebug() << "       Enabled outputs:";
     if (m_connectedOutputs.isEmpty())
         qDebug() << "          - none";
@@ -308,6 +354,11 @@ bool RandRCrtc::applyProposed()
                     m_proposedRotation, outputs, m_connectedOutputs.count());
 
     delete[] outputs;
+    
+
+    // Set gamma
+    set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
+    m_currentBrightness = m_proposedBrightness;
 
     bool ret;
     if (s == RRSetConfigSuccess)
@@ -363,11 +414,19 @@ bool RandRCrtc::proposeRefreshRate(float rate)
     return true;
 }
 
+bool RandRCrtc::proposeBrightness(float _brightness)
+{
+    m_proposedBrightness = _brightness;
+    return true;
+}
+
 void RandRCrtc::proposeOriginal()
 {
     m_proposedRotation = m_originalRotation;
     m_proposedRect = m_originalRect;
     m_proposedRate = m_originalRate;
+    m_proposedBrightness = m_originalBrightness;
+    qDebug() << "[RandRCrtc::proposeOriginal] m_proposedBrightness = " << m_proposedBrightness << "m_currentBrightness" << m_currentBrightness;
 }
 
 void RandRCrtc::setOriginal()
@@ -375,6 +434,7 @@ void RandRCrtc::setOriginal()
     m_originalRotation = m_currentRotation;
     m_originalRect = m_currentRect;
     m_originalRate = m_currentRate;
+    m_originalBrightness = m_currentBrightness;
 }
 
 bool RandRCrtc::proposedChanged()

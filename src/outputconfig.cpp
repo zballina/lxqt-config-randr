@@ -23,6 +23,7 @@
 #include "randroutput.h"
 #include "randrscreen.h"
 #include "randrmode.h"
+#include "randrcrtc.h"
 #include <QtCore/QDebug>
 
 OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigList preceding, bool unified)
@@ -56,6 +57,7 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+     connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
 
     connect(sizeCombo,    SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(orientationCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
@@ -63,6 +65,9 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    
+    connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
         connect( config, SIGNAL(updateView()), this, SLOT(updatePositionList()));
@@ -155,6 +160,13 @@ int OutputConfig::rotation(void) const
     return orientationCombo->itemData(orientationCombo->currentIndex()).toInt();
 }
 
+float OutputConfig::brightness(void) const
+{
+    if( !isActive())
+        return 0;
+    return (float)(brightnessSlider->value())/100.0;
+}
+
 bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
 {
     if (m_output->rect().translated( -normalizePos ) != QRect(position(), resolution()))
@@ -166,6 +178,10 @@ bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
         return true;
     }
     else if (m_output->refreshRate() != refreshRate())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->brightness() != brightness())
     {
         return true;
     }
@@ -276,6 +292,9 @@ void OutputConfig::load()
     /* Output rotation and relative position */
     updateRotationList();
     updatePositionList();
+    
+    /* Update gamma*/
+    updateBrightness();
 
     emit updateView();
 }
@@ -539,4 +558,12 @@ void OutputConfig::updateRateList()
     // update the refresh rate list to reflect the currently selected
     // resolution
     updateRateList(sizeCombo->currentIndex());
+}
+
+
+void OutputConfig::updateBrightness()
+{
+    RandRCrtc *crtc = m_output->crtc();
+    float brightness = crtc->brightness();
+    brightnessSlider->setValue(brightness*100);
 }

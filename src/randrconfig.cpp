@@ -259,7 +259,8 @@ void RandRConfig::apply()
             qDebug() << "Output config for" << output->name() << ":\n"
                         "  rect =" << configuredRect
                      << ", rot =" << config->rotation()
-                     << ", rate =" << config->refreshRate();
+                     << ", rate =" << config->refreshRate()
+                     << ", brightness " << config->brightness();
 
             // Break the connection with the previous CRTC for changed outputs, since
             // otherwise the code could try to use the same CRTC for two different outputs.
@@ -270,6 +271,7 @@ void RandRConfig::apply()
             output->proposeRect(configuredRect.translated( normalizePos ));
             output->proposeRotation(config->rotation());
             output->proposeRefreshRate(config->refreshRate());
+            output->proposeBrightness(config->brightness());
         } else // user wants to disable this output
         {
             qDebug() << "Disabling" << output->name();

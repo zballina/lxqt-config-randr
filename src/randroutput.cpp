@@ -42,6 +42,7 @@ RandROutput::RandROutput(RandRScreen *parent, RROutput id)
     m_proposedRotation = m_originalRotation;
     m_proposedRate = m_originalRate;
     m_proposedRect = m_originalRect;
+    m_proposedBrightness = m_originalBrightness;
 }
 
 RandROutput::~RandROutput()
@@ -106,6 +107,7 @@ void RandROutput::queryOutputInfo(void)
     m_originalRotation = m_crtc->rotation();
     m_originalRate     = m_crtc->refreshRate();
     m_originalRect     = m_crtc->rect();
+    m_originalBrightness = m_crtc->brightness();
 
     if(isConnected()) {
         qDebug() << "Current configuration for output" << m_name << ":";
@@ -342,6 +344,11 @@ int RandROutput::rotation() const
     return m_crtc->rotation();
 }
 
+float RandROutput::brightness() const
+{
+    return m_crtc->brightness();
+}
+
 bool RandROutput::isConnected() const
 {
     return m_connected;
@@ -357,6 +364,7 @@ void RandROutput::proposeOriginal()
     m_proposedRect = m_originalRect;
     m_proposedRate = m_originalRate;
     m_proposedRotation = m_originalRotation;
+    m_proposedBrightness = m_originalBrightness;
 
     if (m_crtc->id() != None)
         m_crtc->proposeOriginal();
@@ -492,6 +500,18 @@ void RandROutput::proposeRotation(int r)
     m_proposedRotation = r;
 }
 
+void RandROutput::proposeBrightness(float _brightness)
+{
+    if (!m_crtc->isValid())
+        slotEnable();
+
+    m_originalBrightness = brightness();
+    m_proposedBrightness = _brightness;
+    m_crtc->proposeBrightness(_brightness);
+    qDebug() << "[RandROutput::proposeBrightness] brightness= " << _brightness 
+        << "\noriginalBrightness " << m_originalBrightness;
+}
+
 void RandROutput::slotChangeSize(QAction *action)
 {
     QSize size = action->data().toSize();
@@ -511,6 +531,16 @@ void RandROutput::slotChangeRefreshRate(QAction *action)
 
     m_proposedRate = rate;
     applyProposed(RandR::ChangeRate, true);
+    
+    qDebug() << "[RandROutput::slotChangeRefreshRate] " << rate;
+}
+
+void RandROutput::slotChangeBrightness(QAction *action)
+{
+    float brightness = action->data().toDouble();
+
+    m_proposedBrightness = brightness;
+    applyProposed(RandR::ChangeBrightness, true);
 }
 
 void RandROutput::slotDisable()
@@ -585,6 +615,8 @@ bool RandROutput::tryCrtc(RandRCrtc *crtc, int changes)
         crtc->proposeRotation(m_proposedRotation);
     if (changes & RandR::ChangeRate)
         crtc->proposeRefreshRate(m_proposedRate);
+    if(changes & RandR::ChangeBrightness)
+        crtc->proposeBrightness(m_proposedBrightness);
 
     if (crtc->applyProposed()) {
         qDebug() << "Changed output" << m_name << "to CRTC" << crtc->id();
@@ -620,8 +652,10 @@ bool RandROutput::applyProposed(int changes, bool confirm)
     if (m_crtc->isValid()
         && (m_crtc->rect() == m_proposedRect || !(changes & RandR::ChangeRect))
         && (m_crtc->rotation() == m_proposedRotation || !(changes & RandR::ChangeRotation))
-        && ((m_crtc->refreshRate() == m_proposedRate || !m_proposedRate || !(changes & RandR::ChangeRate))))
+        && ((m_crtc->refreshRate() == m_proposedRate || !m_proposedRate || !(changes & RandR::ChangeRate)))
+        && (m_crtc->brightness() == m_proposedBrightness || !(changes & RandR::ChangeBrightness)))
     {
+        qDebug() << "No changes for output" << m_name;
         return true;
     }
     qDebug() << "Applying proposed changes for output" << m_name << "...";

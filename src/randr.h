@@ -83,7 +83,8 @@ public:
         ChangeRotation   = 0x08,
         ChangeConnection = 0x10,
         ChangeRect       = 0x20,
-        ChangeRate       = 0x40
+        ChangeRate       = 0x40,
+        ChangeBrightness = 0x80
     };
 
     static QString rotationName(int rotation, bool pastTense = false, bool capitalised = true);
