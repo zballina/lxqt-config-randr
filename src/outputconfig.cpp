@@ -47,6 +47,10 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
             this, SLOT(updateRotationList()));
     connect(m_output, SIGNAL(outputChanged(RROutput,int)),
             this,     SLOT(outputChanged(RROutput,int)));
+    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(virtualModeScaleComboChanged(int)));
+    connect(sizeCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateVirtualModeResolution()));
 
     load();
 
@@ -165,6 +169,21 @@ float OutputConfig::brightness(void) const
     if( !isActive())
         return 0;
     return (float)(brightnessSlider->value())/100.0;
+}
+
+QSize OutputConfig::virtualSize(void) const
+{
+    if( !isActive())
+        return QSize();
+    QSize s(virtualXModeSpinBox->value(), virtualYModeSpinBox->value());
+    return s;
+}
+
+bool OutputConfig::tracking(void) const
+{
+    if( !isActive())
+        return 0;
+    return trackingCheckBox->isChecked();
 }
 
 bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
@@ -322,6 +341,30 @@ bool OutputConfig::isRelativeTo( QRect rect, QRect to, Relation rel )
         default:
             return false;
     }
+}
+
+void OutputConfig::virtualModeScaleComboChanged(int item)
+{
+    if(item<5)
+    {
+        virtualXModeSpinBox->setEnabled(false);
+        virtualYModeSpinBox->setEnabled(false);
+        updateVirtualModeResolution();
+    }
+    else
+    {
+        virtualXModeSpinBox->setEnabled(true);
+        virtualYModeSpinBox->setEnabled(true);
+    }
+}
+
+void OutputConfig::updateVirtualModeResolution(void)
+{
+    QSize size = resolution();
+    int item = scaleComboBox->currentIndex();
+    float scale = 1.0 + 0.25*item; //Index 0 is 100 %, index 1 is 125 %, ...
+    virtualXModeSpinBox->setValue( (int)(size.width()*scale+0.5));
+    virtualYModeSpinBox->setValue( (int)(size.height()*scale+0.5));
 }
 
 void OutputConfig::positionComboChanged(int item)

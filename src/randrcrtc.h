@@ -52,6 +52,8 @@ public:
     bool proposeRotation(int rotation);
     bool proposeRefreshRate(float rate);
     bool proposeBrightness(float brightness);
+    bool proposeTracking(bool tracking);
+    bool proposeVirtualSize(const QSize &size);
 
     // applying stuff
     bool applyProposed();
@@ -68,6 +70,10 @@ public:
     //Gamma vaules
     float red, blue, green;
     float brightness() const;
+    
+    // Virtual modes
+    QRect virtualRect() const;
+    bool tracking() const;
 
 signals:
     void crtcChanged(RRCrtc c, int changes);
@@ -77,27 +83,32 @@ private:
     RRMode m_currentMode;
 
     QRect m_currentRect;
+    QRect m_currentVirtualRect;
     float m_currentRate;
     int m_currentRotation;
     float m_currentBrightness;
     float m_currentRed;
     float m_currentBlue;
     float m_currentGreen;
+    bool m_currentTracking;
 
 
     QRect m_originalRect;
+    QRect m_originalVirtualRect;
     float m_originalRate;
     int m_originalRotation;
     float m_originalBrightness;
+    bool m_originalTracking;
 
     QRect m_proposedRect;
+    QRect m_proposedVirtualRect;
     float m_proposedRate;
     int m_proposedRotation;
-    
     float m_proposedBrightness;
     float m_proposedRed;
     float m_proposedGreen;
     float m_proposedBlue;
+    bool m_proposedTracking;
 
     OutputList m_connectedOutputs;
     OutputList m_possibleOutputs;

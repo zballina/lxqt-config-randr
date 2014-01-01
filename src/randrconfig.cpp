@@ -272,6 +272,8 @@ void RandRConfig::apply()
             output->proposeRotation(config->rotation());
             output->proposeRefreshRate(config->refreshRate());
             output->proposeBrightness(config->brightness());
+            output->proposeVirtualSize(config->virtualSize());
+            output->proposeTracking(config->tracking());
         } else // user wants to disable this output
         {
             qDebug() << "Disabling" << output->name();

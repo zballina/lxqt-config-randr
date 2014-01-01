@@ -330,6 +330,8 @@ bool RandRScreen::setSize(const QSize &s)
 
     XRRSetScreenSize(QX11Info::display(), rootWindow(), s.width(), s.height(), widthMM, heightMM);
     m_rect.setSize(s);
+    
+    qDebug() << "[RandRScreen::setSize] width=" << s.width() << "height=" << s.height();
 
     return true;
 }
