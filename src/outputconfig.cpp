@@ -61,7 +61,8 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
-     connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
 
     connect(sizeCombo,    SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(orientationCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
@@ -69,8 +70,8 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
-    
     connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
