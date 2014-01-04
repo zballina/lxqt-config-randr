@@ -54,6 +54,7 @@ public:
     bool proposeBrightness(float brightness);
     bool proposeTracking(bool tracking);
     bool proposeVirtualSize(const QSize &size);
+    bool proposeVirtualModeEnabled(bool enable);
 
     // applying stuff
     bool applyProposed();
@@ -74,6 +75,7 @@ public:
     // Virtual modes
     QRect virtualRect() const;
     bool tracking() const;
+    bool virtualModeEnabled() const;
 
 signals:
     void crtcChanged(RRCrtc c, int changes);
@@ -91,6 +93,7 @@ private:
     float m_currentBlue;
     float m_currentGreen;
     bool m_currentTracking;
+    bool m_currentVirtualModeEnabled;
 
 
     QRect m_originalRect;
@@ -99,6 +102,7 @@ private:
     int m_originalRotation;
     float m_originalBrightness;
     bool m_originalTracking;
+    bool m_originalVirtualModeEnabled;
 
     QRect m_proposedRect;
     QRect m_proposedVirtualRect;
@@ -109,10 +113,14 @@ private:
     float m_proposedGreen;
     float m_proposedBlue;
     bool m_proposedTracking;
+    bool m_proposedVirtualModeEnabled;
 
     OutputList m_connectedOutputs;
     OutputList m_possibleOutputs;
     int m_rotations;
+    
+    XTransform m_transform;
+    char *m_filter;
 
     RandRScreen *m_screen;
 };

@@ -51,6 +51,9 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
             this, SLOT(virtualModeScaleComboChanged(int)));
     connect(sizeCombo, SIGNAL(currentIndexChanged(int)),
             this, SLOT(updateVirtualModeResolution()));
+    connect(vitualModecheckBox, SIGNAL(stateChanged(int)), this, SLOT(enableVirtualMode(int)));
+
+    enableVirtualMode(vitualModecheckBox->checkState());
 
     load();
 
@@ -185,6 +188,13 @@ bool OutputConfig::tracking(void) const
     if( !isActive())
         return 0;
     return trackingCheckBox->isChecked();
+}
+
+bool OutputConfig::virtualModeEnabled(void) const
+{
+    if( !isActive())
+        return 0;
+    return vitualModecheckBox->isChecked();
 }
 
 bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
@@ -366,6 +376,17 @@ void OutputConfig::updateVirtualModeResolution(void)
     float scale = 1.0 + 0.25*item; //Index 0 is 100 %, index 1 is 125 %, ...
     virtualXModeSpinBox->setValue( (int)(size.width()*scale+0.5));
     virtualYModeSpinBox->setValue( (int)(size.height()*scale+0.5));
+}
+
+void OutputConfig::enableVirtualMode(int state)
+{
+    bool enable = (state == Qt::Checked);
+    //virtualXModeSpinBox->setEnabled(enable);
+    //virtualYModeSpinBox->setEnabled(enable);
+    scaleComboBox->setEnabled(enable);
+    trackingCheckBox->setEnabled(enable);
+    int item = scaleComboBox->currentIndex();
+    virtualModeScaleComboChanged(item);
 }
 
 void OutputConfig::positionComboChanged(int item)

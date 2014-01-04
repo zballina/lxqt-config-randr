@@ -112,6 +112,10 @@ public:
     /** Returns if tracking is enabled.
      */
     bool tracking() const;
+    
+    /** Returns if virtual mode is enabled is enabled.
+     */
+    bool virtualModeEnabled() const;
 
     /** Determines whether this output is connected to a display device.
      * It is not necessarily active. */
@@ -131,6 +135,7 @@ public:
     void proposeBrightness(float brightness);
     void proposeTracking(bool tracking);
     void proposeVirtualSize(const QSize &size);
+    void proposeVirtualModeEnabled(bool enabled);
 
     void load(QSettings &config);
     void save(QSettings &config);
@@ -187,6 +192,7 @@ private:
     float m_proposedBrightness;
     QRect m_proposedVirtualRect;
     bool m_proposedTracking;
+    bool m_proposedVirtualModeEnabled;
 
     QRect m_originalRect;
     int   m_originalRotation;
@@ -194,6 +200,7 @@ private:
     float m_originalBrightness;
     QRect m_originalVirtualRect;
     bool m_originalTracking;
+    bool m_originalVirtualModeEnabled;
 
     ModeList m_modes;
     RandRMode m_preferredMode;

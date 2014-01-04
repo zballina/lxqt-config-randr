@@ -42,13 +42,17 @@ RandRCrtc::RandRCrtc(RandRScreen *parent, RRCrtc id)
     m_originalBrightness = 1.0;
     m_rotations = RandR::Rotate0;
     m_currentTracking = m_originalTracking = m_proposedTracking = true;
+    m_currentVirtualModeEnabled = m_originalVirtualModeEnabled = m_proposedVirtualModeEnabled = false;
+    memset (&m_transform, '\0', sizeof (m_transform));
+    m_filter = new char[9];
+    sprintf(m_filter, "bilinear");
 
     m_id = id;
 }
 
 RandRCrtc::~RandRCrtc()
 {
-    // do nothing for now
+    delete m_filter;
 }
 
 RRCrtc RandRCrtc::id() const
@@ -79,6 +83,11 @@ QRect RandRCrtc::virtualRect() const
 bool RandRCrtc::tracking() const
 {
     return m_currentTracking;
+}
+
+bool RandRCrtc::virtualModeEnabled() const
+{
+    return m_currentVirtualModeEnabled;
 }
 
 bool RandRCrtc::isValid(void) const
@@ -215,6 +224,7 @@ void RandRCrtc::loadSettings(bool notify)
     m_proposedBlue = m_currentBlue;
     m_proposedVirtualRect = m_currentVirtualRect;
     m_proposedTracking = m_currentTracking;
+    m_proposedVirtualModeEnabled = m_currentVirtualModeEnabled;
 
     // free the info
     XRRFreeCrtcInfo(info);
@@ -382,43 +392,71 @@ bool RandRCrtc::applyProposed()
     for (int i = 0; i < m_connectedOutputs.count(); ++i)
         outputs[i] = m_connectedOutputs.at(i);
 
-    /////////////////////////////////////
-    // Changing Size "--fb"
-    m_screen->setSize( m_proposedVirtualRect.size() );
-    /////////////////////////////////////
-
     Status s;
-    if(m_proposedTracking)
-        s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
-                    RandR::timestamp, m_proposedVirtualRect.width(), m_proposedVirtualRect.height(),  mode.id(),
-                    m_proposedRotation, outputs, m_connectedOutputs.count());
-    else
-        s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
+
+    if(m_proposedVirtualModeEnabled)
+    {
+        /////////////////////////////////////
+        // Changing Size "--fb"
+        m_screen->setSize( m_proposedVirtualRect.size() );
+        /////////////////////////////////////
+
+        if(m_proposedTracking)
+        {/*
+            s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
+                        RandR::timestamp, m_proposedVirtualRect.width(), m_proposedVirtualRect.height(),  mode.id(),
+                        m_proposedRotation, outputs, m_connectedOutputs.count());*/
+        }
+        
+        {
+            { // Set scale
+                int major, minor;
+                XRRQueryVersion (QX11Info::display(), &major, &minor);
+                if (major > 1 || (major == 1 && minor >= 3))
+                {
+                    int nparams = 0;
+                    XFixed *params = NULL;
+                    memset (&m_transform, '\0', sizeof (m_transform));
+                    float width=(float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
+                    float height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
+                    if(m_proposedTracking || !m_proposedVirtualModeEnabled)
+                        width = height = 1.0;
+                    m_transform.matrix[0][0] = XDoubleToFixed (width);
+                    m_transform.matrix[1][1] = XDoubleToFixed (height);
+                    m_transform.matrix[2][2] = XDoubleToFixed (1.0);
+                    XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
+                    qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
+                }
+            }
+        }
+    }
+    s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
                     RandR::timestamp, m_proposedRect.x(), m_proposedRect.y(), mode.id(),
                     m_proposedRotation, outputs, m_connectedOutputs.count());
 
     delete[] outputs;
     
-
-    /////////////////////////////////////
-    XRRPanning *panning = XRRGetPanning  (QX11Info::display(),m_screen->resources(), m_id);
-    panning->left = panning->top = 0;
-    panning->width = m_proposedVirtualRect.width();
-    panning->height = m_proposedVirtualRect.height();
-    panning->track_width = 0;
-    panning->track_height = 0;
-    panning->track_left = panning->track_top = 0;
-    panning->timestamp = RandR::timestamp;
+    if(m_proposedVirtualModeEnabled)
     {
-    	Status s = XRRSetPanning (QX11Info::display(),m_screen->resources(), m_id, panning);
-    	if (s == RRSetConfigSuccess)
-    		qDebug() << "[RandRCrtc::applyProposed] Panning changed";
-    	else
-    		qDebug() << "[RandRCrtc::applyProposed] Panning doesn't changed";
+        /////////////////////////////////////
+        XRRPanning *panning = XRRGetPanning  (QX11Info::display(),m_screen->resources(), m_id);
+        panning->left = panning->top = 0;
+        panning->width = m_proposedVirtualRect.width();
+        panning->height = m_proposedVirtualRect.height();
+        panning->track_width = 0;
+        panning->track_height = 0;
+        panning->track_left = panning->track_top = 0;
+        panning->timestamp = RandR::timestamp;
+        {
+        	Status s = XRRSetPanning (QX11Info::display(),m_screen->resources(), m_id, panning);
+        	if (s == RRSetConfigSuccess)
+        		qDebug() << "[RandRCrtc::applyProposed] Panning changed";
+        	else
+        		qDebug() << "[RandRCrtc::applyProposed] Panning doesn't changed";
+        }
+        XRRFreePanning(panning);
+        /////////////////////////////////////
     }
-    XRRFreePanning(panning);
-    /////////////////////////////////////
-
     
     // Set gamma
     set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
@@ -434,6 +472,8 @@ bool RandRCrtc::applyProposed()
         m_currentRate = mode.refreshRate();
         m_currentVirtualRect = m_proposedVirtualRect;
         m_currentTracking = m_proposedTracking;
+        m_currentVirtualModeEnabled = m_proposedVirtualModeEnabled;
+        
         emit crtcChanged(m_id, RandR::ChangeMode);
         ret = true;
     }
@@ -446,7 +486,8 @@ bool RandRCrtc::applyProposed()
             m_screen->loadSettings(true);
     }
 
-    m_screen->adjustSize();
+    if(!m_proposedVirtualModeEnabled)
+        m_screen->adjustSize();
     return ret;
 }
 
@@ -466,6 +507,12 @@ bool RandRCrtc::proposeVirtualSize(const QSize &s)
 bool RandRCrtc::proposeTracking(bool tracking)
 {
     m_proposedTracking = tracking;
+    return true;
+}
+
+bool RandRCrtc::proposeVirtualModeEnabled(bool enabled)
+{
+    m_proposedVirtualModeEnabled = enabled;
     return true;
 }
 
@@ -506,6 +553,7 @@ void RandRCrtc::proposeOriginal()
     m_proposedBrightness = m_originalBrightness;
     m_proposedVirtualRect = m_originalVirtualRect;
     m_proposedTracking = m_originalTracking;
+    m_proposedVirtualModeEnabled = m_originalVirtualModeEnabled;
 }
 
 void RandRCrtc::setOriginal()
@@ -516,6 +564,7 @@ void RandRCrtc::setOriginal()
     m_originalBrightness = m_currentBrightness;
     m_originalVirtualRect = m_currentVirtualRect;
     m_originalTracking = m_currentTracking;
+    m_originalVirtualModeEnabled = m_currentVirtualModeEnabled;
 }
 
 bool RandRCrtc::proposedChanged()
@@ -525,7 +574,8 @@ bool RandRCrtc::proposedChanged()
         m_proposedRate != m_currentRate ||
         m_proposedBrightness != m_currentBrightness ||
         m_proposedVirtualRect != m_currentVirtualRect ||
-        m_proposedTracking != m_currentTracking );
+        m_proposedTracking != m_currentTracking ||
+        m_proposedVirtualModeEnabled != m_currentVirtualModeEnabled);
 }
 
 bool RandRCrtc::addOutput(RROutput output, const QSize &s)

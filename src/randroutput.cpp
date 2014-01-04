@@ -45,6 +45,7 @@ RandROutput::RandROutput(RandRScreen *parent, RROutput id)
     m_proposedBrightness = m_originalBrightness;
     m_proposedVirtualRect = m_originalVirtualRect;
     m_proposedTracking = m_originalTracking;
+    m_proposedVirtualModeEnabled = m_originalVirtualModeEnabled;
 }
 
 RandROutput::~RandROutput()
@@ -112,6 +113,7 @@ void RandROutput::queryOutputInfo(void)
     m_originalBrightness = m_crtc->brightness();
     m_originalVirtualRect = m_crtc->virtualRect();
     m_originalTracking = m_crtc->tracking();
+    m_originalVirtualModeEnabled = m_crtc->virtualModeEnabled();
 
     if(isConnected()) {
         qDebug() << "Current configuration for output" << m_name << ":";
@@ -363,6 +365,11 @@ bool RandROutput::tracking() const
     return m_crtc->tracking();
 }
 
+bool RandROutput::virtualModeEnabled() const
+{
+    return m_crtc->virtualModeEnabled();
+}
+
 bool RandROutput::isConnected() const
 {
     return m_connected;
@@ -381,6 +388,7 @@ void RandROutput::proposeOriginal()
     m_proposedBrightness = m_originalBrightness;
     m_proposedVirtualRect = m_originalVirtualRect;
     m_proposedTracking = m_originalTracking;
+    m_proposedVirtualModeEnabled = m_originalVirtualModeEnabled;
 
     if (m_crtc->id() != None)
         m_crtc->proposeOriginal();
@@ -544,6 +552,15 @@ void RandROutput::proposeTracking(bool _tracking)
     m_proposedTracking = _tracking;
 }
 
+void RandROutput::proposeVirtualModeEnabled(bool enabled)
+{
+    if (!m_crtc->isValid())
+        slotEnable();
+
+    m_originalVirtualModeEnabled = virtualModeEnabled();
+    m_proposedVirtualModeEnabled = enabled;
+}
+
 void RandROutput::slotChangeSize(QAction *action)
 {
     QSize size = action->data().toSize();
@@ -653,6 +670,7 @@ bool RandROutput::tryCrtc(RandRCrtc *crtc, int changes)
     {
         crtc->proposeVirtualSize(m_proposedVirtualRect.size());
         crtc->proposeTracking(m_proposedTracking);
+        crtc->proposeVirtualModeEnabled(m_proposedVirtualModeEnabled);
     }
     
     if (crtc->applyProposed()) {
@@ -691,7 +709,7 @@ bool RandROutput::applyProposed(int changes, bool confirm)
         && (m_crtc->rotation() == m_proposedRotation || !(changes & RandR::ChangeRotation))
         && ((m_crtc->refreshRate() == m_proposedRate || !m_proposedRate || !(changes & RandR::ChangeRate)))
         && (m_crtc->brightness() == m_proposedBrightness || !(changes & RandR::ChangeBrightness))
-        && (m_crtc->virtualRect() == m_proposedVirtualRect || m_crtc->tracking() == m_proposedTracking || !(changes & RandR::ChangeVirtualRect))
+        && (m_crtc->virtualRect() == m_proposedVirtualRect || m_crtc->tracking() == m_proposedTracking || m_crtc->virtualModeEnabled() == m_proposedVirtualModeEnabled || !(changes & RandR::ChangeVirtualRect))
         )
     {
         qDebug() << "No changes for output" << m_name;

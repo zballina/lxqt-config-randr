@@ -167,16 +167,6 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="virtualModeLabel">
-     <property name="text">
-      <string>Virtual Mode:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -282,6 +272,13 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="vitualModecheckBox">
+     <property name="text">
+      <string>Virtual Mode</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

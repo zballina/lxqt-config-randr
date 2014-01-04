@@ -274,6 +274,7 @@ void RandRConfig::apply()
             output->proposeBrightness(config->brightness());
             output->proposeVirtualSize(config->virtualSize());
             output->proposeTracking(config->tracking());
+            output->proposeVirtualModeEnabled(config->virtualModeEnabled());
         } else // user wants to disable this output
         {
             qDebug() << "Disabling" << output->name();
