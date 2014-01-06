@@ -66,6 +66,7 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
+    connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setConfigDirty()));
 
     connect(sizeCombo,    SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(orientationCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
@@ -75,6 +76,7 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
+    connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SIGNAL(updateView()));
     
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
@@ -212,6 +214,14 @@ bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
         return true;
     }
     else if (m_output->crtc()->brightness() != brightness())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->virtualRect().size() != virtualSize())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->tracking() != tracking())
     {
         return true;
     }

@@ -388,11 +388,7 @@ bool RandRCrtc::applyProposed()
         }
     }
 
-    RROutput *outputs = new RROutput[m_connectedOutputs.count()];
-    for (int i = 0; i < m_connectedOutputs.count(); ++i)
-        outputs[i] = m_connectedOutputs.at(i);
 
-    Status s;
 
     if(m_proposedVirtualModeEnabled)
     {
@@ -407,34 +403,45 @@ bool RandRCrtc::applyProposed()
                         RandR::timestamp, m_proposedVirtualRect.width(), m_proposedVirtualRect.height(),  mode.id(),
                         m_proposedRotation, outputs, m_connectedOutputs.count());*/
         }
-        
-        {
-            { // Set scale
-                int major, minor;
-                XRRQueryVersion (QX11Info::display(), &major, &minor);
-                if (major > 1 || (major == 1 && minor >= 3))
+    }
+    {
+        { // Set scale
+            int major, minor;
+            XRRQueryVersion (QX11Info::display(), &major, &minor);
+            if (major > 1 || (major == 1 && minor >= 3))
+            {
+                int nparams = 0;
+                XFixed *params = NULL;
+                memset (&m_transform, '\0', sizeof (m_transform));
+                float width;
+                float height;
+                if(m_proposedTracking || !m_proposedVirtualModeEnabled)
+                    width = height = 1.0;
+                else
                 {
-                    int nparams = 0;
-                    XFixed *params = NULL;
-                    memset (&m_transform, '\0', sizeof (m_transform));
-                    float width=(float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
-                    float height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
-                    if(m_proposedTracking || !m_proposedVirtualModeEnabled)
-                        width = height = 1.0;
-                    m_transform.matrix[0][0] = XDoubleToFixed (width);
-                    m_transform.matrix[1][1] = XDoubleToFixed (height);
-                    m_transform.matrix[2][2] = XDoubleToFixed (1.0);
-                    XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
-                    qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
+                    width=(float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
+                    height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
                 }
+                m_transform.matrix[0][0] = XDoubleToFixed (width);
+                m_transform.matrix[1][1] = XDoubleToFixed (height);
+                m_transform.matrix[2][2] = XDoubleToFixed (1.0);
+                XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
+                qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
             }
         }
     }
+
+    RROutput *outputs = new RROutput[m_connectedOutputs.count()];
+    for (int i = 0; i < m_connectedOutputs.count(); ++i)
+        outputs[i] = m_connectedOutputs.at(i);
+
+    Status s;
     s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
-                    RandR::timestamp, m_proposedRect.x(), m_proposedRect.y(), mode.id(),
-                    m_proposedRotation, outputs, m_connectedOutputs.count());
+                RandR::timestamp, m_proposedRect.x(), m_proposedRect.y(), mode.id(),
+                m_proposedRotation, outputs, m_connectedOutputs.count());
 
     delete[] outputs;
+
     
     if(m_proposedVirtualModeEnabled)
     {
