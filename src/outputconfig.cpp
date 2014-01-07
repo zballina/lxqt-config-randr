@@ -67,6 +67,8 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
     connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setConfigDirty()));
+    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
 
     connect(sizeCombo,    SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(orientationCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
@@ -77,6 +79,8 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SIGNAL(updateView()));
+    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
+    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
     
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
@@ -383,9 +387,12 @@ void OutputConfig::updateVirtualModeResolution(void)
 {
     QSize size = resolution();
     int item = scaleComboBox->currentIndex();
-    float scale = 1.0 + 0.25*item; //Index 0 is 100 %, index 1 is 125 %, ...
-    virtualXModeSpinBox->setValue( (int)(size.width()*scale+0.5));
-    virtualYModeSpinBox->setValue( (int)(size.height()*scale+0.5));
+    if(item < 5)
+    {
+        float scale = 1.0 + 0.25*item; //Index 0 is 100 %, index 1 is 125 %, ...
+        virtualXModeSpinBox->setValue( (int)(size.width()*scale+0.5));
+        virtualYModeSpinBox->setValue( (int)(size.height()*scale+0.5));
+    }
 }
 
 void OutputConfig::enableVirtualMode(int state)
