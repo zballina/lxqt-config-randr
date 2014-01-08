@@ -65,7 +65,7 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
-    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
+    //connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
     connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setConfigDirty()));
     connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
@@ -77,7 +77,7 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
-    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
+    //connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SIGNAL(updateView()));
     connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
     connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
