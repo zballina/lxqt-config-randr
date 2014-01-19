@@ -79,8 +79,8 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     //connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SIGNAL(updateView()));
-    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
-    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateView()));
+    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
@@ -398,12 +398,22 @@ void OutputConfig::updateVirtualModeResolution(void)
 void OutputConfig::enableVirtualMode(int state)
 {
     bool enable = (state == Qt::Checked);
-    //virtualXModeSpinBox->setEnabled(enable);
-    //virtualYModeSpinBox->setEnabled(enable);
-    scaleComboBox->setEnabled(enable);
-    trackingCheckBox->setEnabled(enable);
-    int item = scaleComboBox->currentIndex();
-    virtualModeScaleComboChanged(item);
+     int major, minor;
+    XRRQueryVersion (QX11Info::display(), &major, &minor);
+    if (major > 1 || (major == 1 && minor >= 3))
+    {
+        //virtualXModeSpinBox->setEnabled(enable);
+        //virtualYModeSpinBox->setEnabled(enable);
+        scaleComboBox->setEnabled(enable);
+        trackingCheckBox->setEnabled(enable);
+        int item = scaleComboBox->currentIndex();
+        virtualModeScaleComboChanged(item);
+    }
+    else
+    {
+        scaleComboBox->setEnabled(false);
+        trackingCheckBox->setEnabled(false);
+    }
 }
 
 void OutputConfig::positionComboChanged(int item)
