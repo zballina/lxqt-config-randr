@@ -51,6 +51,10 @@ public:
     bool proposePosition(const QPoint &p);
     bool proposeRotation(int rotation);
     bool proposeRefreshRate(float rate);
+    bool proposeBrightness(float brightness);
+    bool proposeTracking(bool tracking);
+    bool proposeVirtualSize(const QSize &size);
+    bool proposeVirtualModeEnabled(bool enable);
 
     // applying stuff
     bool applyProposed();
@@ -63,6 +67,15 @@ public:
     OutputList connectedOutputs() const;
 
     ModeList modes() const;
+    
+    //Gamma vaules
+    float red, blue, green;
+    float brightness() const;
+    
+    // Virtual modes
+    QRect virtualRect() const;
+    bool tracking() const;
+    bool virtualModeEnabled() const;
 
 signals:
     void crtcChanged(RRCrtc c, int changes);
@@ -72,21 +85,42 @@ private:
     RRMode m_currentMode;
 
     QRect m_currentRect;
+    QRect m_currentVirtualRect;
     float m_currentRate;
     int m_currentRotation;
+    float m_currentBrightness;
+    float m_currentRed;
+    float m_currentBlue;
+    float m_currentGreen;
+    bool m_currentTracking;
+    bool m_currentVirtualModeEnabled;
 
 
     QRect m_originalRect;
+    QRect m_originalVirtualRect;
     float m_originalRate;
     int m_originalRotation;
+    float m_originalBrightness;
+    bool m_originalTracking;
+    bool m_originalVirtualModeEnabled;
 
     QRect m_proposedRect;
+    QRect m_proposedVirtualRect;
     float m_proposedRate;
     int m_proposedRotation;
+    float m_proposedBrightness;
+    float m_proposedRed;
+    float m_proposedGreen;
+    float m_proposedBlue;
+    bool m_proposedTracking;
+    bool m_proposedVirtualModeEnabled;
 
     OutputList m_connectedOutputs;
     OutputList m_possibleOutputs;
     int m_rotations;
+    
+    XTransform m_transform;
+    char *m_filter;
 
     RandRScreen *m_screen;
 };

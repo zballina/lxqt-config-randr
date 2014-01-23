@@ -23,6 +23,7 @@
 #include "randroutput.h"
 #include "randrscreen.h"
 #include "randrmode.h"
+#include "randrcrtc.h"
 #include <QtCore/QDebug>
 
 OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigList preceding, bool unified)
@@ -46,6 +47,13 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
             this, SLOT(updateRotationList()));
     connect(m_output, SIGNAL(outputChanged(RROutput,int)),
             this,     SLOT(outputChanged(RROutput,int)));
+    connect(scaleComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(virtualModeScaleComboChanged(int)));
+    connect(sizeCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateVirtualModeResolution()));
+    connect(vitualModecheckBox, SIGNAL(stateChanged(int)), this, SLOT(enableVirtualMode(int)));
+
+    enableVirtualMode(vitualModecheckBox->checkState());
 
     load();
 
@@ -56,6 +64,11 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    connect(brightnessSlider, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    //connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setConfigDirty()));
+    connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setConfigDirty()));
+    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
+    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setConfigDirty()));
 
     connect(sizeCombo,    SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(orientationCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
@@ -63,6 +76,12 @@ OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigLis
     connect(positionOutputCombo, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosX, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
     connect(absolutePosY, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    connect(brightnessSlider,    SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    //connect(scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SIGNAL(updateView()));
+    connect(trackingCheckBox, SIGNAL(stateChanged(int)), this, SIGNAL(updateView()));
+    connect(virtualYModeSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    connect(virtualXModeSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(updateView()));
+    
     // make sure to update option for relative position when other outputs get enabled/disabled
     foreach( OutputConfig* config, precedingOutputConfigs )
         connect( config, SIGNAL(updateView()), this, SLOT(updatePositionList()));
@@ -155,6 +174,35 @@ int OutputConfig::rotation(void) const
     return orientationCombo->itemData(orientationCombo->currentIndex()).toInt();
 }
 
+float OutputConfig::brightness(void) const
+{
+    if( !isActive())
+        return 0;
+    return (float)(brightnessSlider->value())/100.0;
+}
+
+QSize OutputConfig::virtualSize(void) const
+{
+    if( !isActive())
+        return QSize();
+    QSize s(virtualXModeSpinBox->value(), virtualYModeSpinBox->value());
+    return s;
+}
+
+bool OutputConfig::tracking(void) const
+{
+    if( !isActive())
+        return 0;
+    return trackingCheckBox->isChecked();
+}
+
+bool OutputConfig::virtualModeEnabled(void) const
+{
+    if( !isActive())
+        return 0;
+    return vitualModecheckBox->isChecked();
+}
+
 bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
 {
     if (m_output->rect().translated( -normalizePos ) != QRect(position(), resolution()))
@@ -166,6 +214,18 @@ bool OutputConfig::hasPendingChanges( const QPoint& normalizePos ) const
         return true;
     }
     else if (m_output->refreshRate() != refreshRate())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->brightness() != brightness())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->virtualRect().size() != virtualSize())
+    {
+        return true;
+    }
+    else if (m_output->crtc()->tracking() != tracking())
     {
         return true;
     }
@@ -276,6 +336,9 @@ void OutputConfig::load()
     /* Output rotation and relative position */
     updateRotationList();
     updatePositionList();
+    
+    /* Update gamma*/
+    updateBrightness();
 
     emit updateView();
 }
@@ -302,6 +365,54 @@ bool OutputConfig::isRelativeTo( QRect rect, QRect to, Relation rel )
         case Absolute:
         default:
             return false;
+    }
+}
+
+void OutputConfig::virtualModeScaleComboChanged(int item)
+{
+    if(item<5)
+    {
+        virtualXModeSpinBox->setEnabled(false);
+        virtualYModeSpinBox->setEnabled(false);
+        updateVirtualModeResolution();
+    }
+    else
+    {
+        virtualXModeSpinBox->setEnabled(true);
+        virtualYModeSpinBox->setEnabled(true);
+    }
+}
+
+void OutputConfig::updateVirtualModeResolution(void)
+{
+    QSize size = resolution();
+    int item = scaleComboBox->currentIndex();
+    if(item < 5)
+    {
+        float scale = 1.0 + 0.25*item; //Index 0 is 100 %, index 1 is 125 %, ...
+        virtualXModeSpinBox->setValue( (int)(size.width()*scale+0.5));
+        virtualYModeSpinBox->setValue( (int)(size.height()*scale+0.5));
+    }
+}
+
+void OutputConfig::enableVirtualMode(int state)
+{
+    bool enable = (state == Qt::Checked);
+     int major, minor;
+    XRRQueryVersion (QX11Info::display(), &major, &minor);
+    if (major > 1 || (major == 1 && minor >= 3))
+    {
+        //virtualXModeSpinBox->setEnabled(enable);
+        //virtualYModeSpinBox->setEnabled(enable);
+        scaleComboBox->setEnabled(enable);
+        trackingCheckBox->setEnabled(enable);
+        int item = scaleComboBox->currentIndex();
+        virtualModeScaleComboChanged(item);
+    }
+    else
+    {
+        scaleComboBox->setEnabled(false);
+        trackingCheckBox->setEnabled(false);
     }
 }
 
@@ -539,4 +650,12 @@ void OutputConfig::updateRateList()
     // update the refresh rate list to reflect the currently selected
     // resolution
     updateRateList(sizeCombo->currentIndex());
+}
+
+
+void OutputConfig::updateBrightness()
+{
+    RandRCrtc *crtc = m_output->crtc();
+    float brightness = crtc->brightness();
+    brightnessSlider->setValue(brightness*100);
 }

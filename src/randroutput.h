@@ -97,9 +97,25 @@ public:
      * to. */
     int rotations() const;
 
-    /** Returns the curent rotation of the CRTC this output is currently
+    /** Returns the current rotation of the CRTC this output is currently
      * connected to */
     int rotation() const;
+    
+    /** Returns the current brightness,
+     */
+    float brightness() const;
+    
+    /** Returns the current virtual size.
+     */
+    QRect virtualRect() const;
+
+    /** Returns if tracking is enabled.
+     */
+    bool tracking() const;
+    
+    /** Returns if virtual mode is enabled is enabled.
+     */
+    bool virtualModeEnabled() const;
 
     /** Determines whether this output is connected to a display device.
      * It is not necessarily active. */
@@ -116,6 +132,10 @@ public:
     void proposeRefreshRate(float rate);
     void proposeRect(const QRect &r);
     void proposeRotation(int rotation);
+    void proposeBrightness(float brightness);
+    void proposeTracking(bool tracking);
+    void proposeVirtualSize(const QSize &size);
+    void proposeVirtualModeEnabled(bool enabled);
 
     void load(QSettings &config);
     void save(QSettings &config);
@@ -128,6 +148,7 @@ public slots:
     void slotDisable();
     void slotEnable();
     void slotSetAsPrimary(bool primary);
+    void slotChangeBrightness(QAction *action);
 
 private slots:
     void slotCrtcChanged(RRCrtc c, int changes);
@@ -168,10 +189,18 @@ private:
     QRect m_proposedRect;
     int   m_proposedRotation;
     float m_proposedRate;
+    float m_proposedBrightness;
+    QRect m_proposedVirtualRect;
+    bool m_proposedTracking;
+    bool m_proposedVirtualModeEnabled;
 
     QRect m_originalRect;
     int   m_originalRotation;
     float m_originalRate;
+    float m_originalBrightness;
+    QRect m_originalVirtualRect;
+    bool m_originalTracking;
+    bool m_originalVirtualModeEnabled;
 
     ModeList m_modes;
     RandRMode m_preferredMode;

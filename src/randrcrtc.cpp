@@ -21,12 +21,17 @@
 #include "randrscreen.h"
 #include "randroutput.h"
 #include "randrmode.h"
+#include "randrgammainfo.h"
 
 RandRCrtc::RandRCrtc(RandRScreen *parent, RRCrtc id)
     : QObject(parent),
       m_currentRect(0, 0, 0, 0),
       m_originalRect(m_currentRect),
-      m_proposedRect(m_originalRect)
+      m_proposedRect(m_originalRect),
+      m_proposedBrightness(1.0),
+      m_currentVirtualRect(0, 0, 0, 0),
+      m_originalVirtualRect(m_currentVirtualRect),
+      m_proposedVirtualRect(m_currentVirtualRect)
 {
     m_screen = parent;
     Q_ASSERT(m_screen);
@@ -34,14 +39,20 @@ RandRCrtc::RandRCrtc(RandRScreen *parent, RRCrtc id)
     m_currentRotation = m_originalRotation = m_proposedRotation = RandR::Rotate0;
     m_currentRate = m_originalRate = m_proposedRate = 0;
     m_currentMode = 0;
+    m_originalBrightness = 1.0;
     m_rotations = RandR::Rotate0;
+    m_currentTracking = m_originalTracking = m_proposedTracking = true;
+    m_currentVirtualModeEnabled = m_originalVirtualModeEnabled = m_proposedVirtualModeEnabled = false;
+    memset (&m_transform, '\0', sizeof (m_transform));
+    m_filter = new char[9];
+    sprintf(m_filter, "bilinear");
 
     m_id = id;
 }
 
 RandRCrtc::~RandRCrtc()
 {
-    // do nothing for now
+    delete m_filter;
 }
 
 RRCrtc RandRCrtc::id() const
@@ -57,6 +68,26 @@ int RandRCrtc::rotations() const
 int RandRCrtc::rotation() const
 {
     return m_currentRotation;
+}
+
+float RandRCrtc::brightness() const
+{
+    return m_currentBrightness;
+}
+
+QRect RandRCrtc::virtualRect() const
+{
+    return m_currentVirtualRect;
+}
+
+bool RandRCrtc::tracking() const
+{
+    return m_currentTracking;
+}
+
+bool RandRCrtc::virtualModeEnabled() const
+{
+    return m_currentVirtualModeEnabled;
 }
 
 bool RandRCrtc::isValid(void) const
@@ -83,6 +114,33 @@ void RandRCrtc::loadSettings(bool notify)
     {
         m_currentRect = rect;
         changes |= RandR::ChangeRect;
+    }
+    
+    // Get panning
+    XRRPanning  *panning_info = XRRGetPanning(QX11Info::display(), m_screen->resources(), m_id);
+    rect = QRect(panning_info->left, panning_info->top, panning_info->width, panning_info->height);
+    if(rect != m_currentVirtualRect)
+    {
+        m_currentVirtualRect = rect;
+        changes |= RandR::ChangeVirtualRect;
+    }
+    if( rect.width() != info->width || rect.height() != info->height )
+    {
+        m_currentTracking = true;
+        changes |= RandR::ChangeVirtualRect;
+    }
+    else
+       m_currentTracking = false;
+    XRRFreePanning(panning_info);
+    
+    // Get red, blue, green and brightness
+    float _brightness;
+    get_gamma_info(QX11Info::display(), m_screen->resources(), m_id, &_brightness, &red, &blue, &green);
+    
+    if(_brightness != m_currentBrightness)
+    {
+        m_currentBrightness = _brightness;
+        changes |= RandR::ChangeBrightness;
     }
 
     // get all connected outputs
@@ -132,11 +190,41 @@ void RandRCrtc::loadSettings(bool notify)
         m_currentRate = m.refreshRate();
         changes |= RandR::ChangeRate;
     }
-
+    /*
+    if (m_currentBrightness != brightness())
+    {
+        m_currentBrightness = brightness();
+        changes |= RandR::ChangeBrightness;
+    }
+    */
+    if (m_currentRed != red)
+    {
+        m_currentRed = red;
+        changes |= RandR::ChangeBrightness;
+    }
+    
+    if (m_currentGreen != green)
+    {
+        m_currentGreen = green;
+        changes |= RandR::ChangeBrightness;
+    }
+    
+    if (m_currentBlue != blue)
+    {
+        m_currentBlue = blue;
+        changes |= RandR::ChangeBrightness;
+    }
     // just to make sure it gets initialized
     m_proposedRect = m_currentRect;
     m_proposedRotation = m_currentRotation;
     m_proposedRate = m_currentRate;
+    m_proposedBrightness = m_currentBrightness;
+    m_proposedRed = m_currentRed;
+    m_proposedGreen = m_currentGreen;
+    m_proposedBlue = m_currentBlue;
+    m_proposedVirtualRect = m_currentVirtualRect;
+    m_proposedTracking = m_currentTracking;
+    m_proposedVirtualModeEnabled = m_currentVirtualModeEnabled;
 
     // free the info
     XRRFreeCrtcInfo(info);
@@ -207,6 +295,7 @@ bool RandRCrtc::applyProposed()
     qDebug() << "       Proposed CRTC rect:" << m_proposedRect;
     qDebug() << "       Proposed rotation:" << m_proposedRotation;
     qDebug() << "       Proposed refresh rate:" << m_proposedRate;
+    qDebug() << "       Proposed brightness:" << m_proposedBrightness;
     qDebug() << "       Enabled outputs:";
     if (m_connectedOutputs.isEmpty())
         qDebug() << "          - none";
@@ -299,15 +388,86 @@ bool RandRCrtc::applyProposed()
         }
     }
 
+
+
+    if(m_proposedVirtualModeEnabled)
+    {
+        /////////////////////////////////////
+        // Changing Size "--fb"
+        m_screen->setSize( m_proposedVirtualRect.size() );
+        /////////////////////////////////////
+
+        if(m_proposedTracking)
+        {/*
+            s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
+                        RandR::timestamp, m_proposedVirtualRect.width(), m_proposedVirtualRect.height(),  mode.id(),
+                        m_proposedRotation, outputs, m_connectedOutputs.count());*/
+        }
+    }
+    {
+        { // Set scale
+            int major, minor;
+            XRRQueryVersion (QX11Info::display(), &major, &minor);
+            if (major > 1 || (major == 1 && minor >= 3))
+            {
+                int nparams = 0;
+                XFixed *params = NULL;
+                memset (&m_transform, '\0', sizeof (m_transform));
+                float width;
+                float height;
+                if(m_proposedTracking || !m_proposedVirtualModeEnabled)
+                    width = height = 1.0;
+                else
+                {
+                    width=(float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
+                    height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
+                }
+                m_transform.matrix[0][0] = XDoubleToFixed (width);
+                m_transform.matrix[1][1] = XDoubleToFixed (height);
+                m_transform.matrix[2][2] = XDoubleToFixed (1.0);
+                XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
+                qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
+            }
+        }
+    }
+
     RROutput *outputs = new RROutput[m_connectedOutputs.count()];
     for (int i = 0; i < m_connectedOutputs.count(); ++i)
         outputs[i] = m_connectedOutputs.at(i);
 
-    Status s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
-                    RandR::timestamp, m_proposedRect.x(), m_proposedRect.y(), mode.id(),
-                    m_proposedRotation, outputs, m_connectedOutputs.count());
+    Status s;
+    s = XRRSetCrtcConfig(QX11Info::display(), m_screen->resources(), m_id,
+                RandR::timestamp, m_proposedRect.x(), m_proposedRect.y(), mode.id(),
+                m_proposedRotation, outputs, m_connectedOutputs.count());
 
     delete[] outputs;
+
+    
+    if(m_proposedVirtualModeEnabled)
+    {
+        /////////////////////////////////////
+        XRRPanning *panning = XRRGetPanning  (QX11Info::display(),m_screen->resources(), m_id);
+        panning->left = panning->top = 0;
+        panning->width = m_proposedVirtualRect.width();
+        panning->height = m_proposedVirtualRect.height();
+        panning->track_width = 0;
+        panning->track_height = 0;
+        panning->track_left = panning->track_top = 0;
+        panning->timestamp = RandR::timestamp;
+        {
+        	Status s = XRRSetPanning (QX11Info::display(),m_screen->resources(), m_id, panning);
+        	if (s == RRSetConfigSuccess)
+        		qDebug() << "[RandRCrtc::applyProposed] Panning changed";
+        	else
+        		qDebug() << "[RandRCrtc::applyProposed] Panning doesn't changed";
+        }
+        XRRFreePanning(panning);
+        /////////////////////////////////////
+    }
+    
+    // Set gamma
+    set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
+    m_currentBrightness = m_proposedBrightness;
 
     bool ret;
     if (s == RRSetConfigSuccess)
@@ -317,6 +477,10 @@ bool RandRCrtc::applyProposed()
         m_currentRotation = m_proposedRotation;
         m_currentRect = m_proposedRect;
         m_currentRate = mode.refreshRate();
+        m_currentVirtualRect = m_proposedVirtualRect;
+        m_currentTracking = m_proposedTracking;
+        m_currentVirtualModeEnabled = m_proposedVirtualModeEnabled;
+        
         emit crtcChanged(m_id, RandR::ChangeMode);
         ret = true;
     }
@@ -329,7 +493,8 @@ bool RandRCrtc::applyProposed()
             m_screen->loadSettings(true);
     }
 
-    m_screen->adjustSize();
+    if(!m_proposedVirtualModeEnabled)
+        m_screen->adjustSize();
     return ret;
 }
 
@@ -337,6 +502,24 @@ bool RandRCrtc::proposeSize(const QSize &s)
 {
     m_proposedRect.setSize(s);
     m_proposedRate = 0;
+    return true;
+}
+
+bool RandRCrtc::proposeVirtualSize(const QSize &s)
+{
+    m_proposedVirtualRect.setSize(s);
+    return true;
+}
+
+bool RandRCrtc::proposeTracking(bool tracking)
+{
+    m_proposedTracking = tracking;
+    return true;
+}
+
+bool RandRCrtc::proposeVirtualModeEnabled(bool enabled)
+{
+    m_proposedVirtualModeEnabled = enabled;
     return true;
 }
 
@@ -363,11 +546,21 @@ bool RandRCrtc::proposeRefreshRate(float rate)
     return true;
 }
 
+bool RandRCrtc::proposeBrightness(float _brightness)
+{
+    m_proposedBrightness = _brightness;
+    return true;
+}
+
 void RandRCrtc::proposeOriginal()
 {
     m_proposedRotation = m_originalRotation;
     m_proposedRect = m_originalRect;
     m_proposedRate = m_originalRate;
+    m_proposedBrightness = m_originalBrightness;
+    m_proposedVirtualRect = m_originalVirtualRect;
+    m_proposedTracking = m_originalTracking;
+    m_proposedVirtualModeEnabled = m_originalVirtualModeEnabled;
 }
 
 void RandRCrtc::setOriginal()
@@ -375,13 +568,21 @@ void RandRCrtc::setOriginal()
     m_originalRotation = m_currentRotation;
     m_originalRect = m_currentRect;
     m_originalRate = m_currentRate;
+    m_originalBrightness = m_currentBrightness;
+    m_originalVirtualRect = m_currentVirtualRect;
+    m_originalTracking = m_currentTracking;
+    m_originalVirtualModeEnabled = m_currentVirtualModeEnabled;
 }
 
 bool RandRCrtc::proposedChanged()
 {
     return (m_proposedRotation != m_currentRotation ||
         m_proposedRect != m_currentRect ||
-        m_proposedRate != m_currentRate);
+        m_proposedRate != m_currentRate ||
+        m_proposedBrightness != m_currentBrightness ||
+        m_proposedVirtualRect != m_currentVirtualRect ||
+        m_proposedTracking != m_currentTracking ||
+        m_proposedVirtualModeEnabled != m_currentVirtualModeEnabled);
 }
 
 bool RandRCrtc::addOutput(RROutput output, const QSize &s)

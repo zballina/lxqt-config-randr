@@ -20,6 +20,7 @@ set(SOURCES_FILES
     randr.cpp
     randrmode.cpp
     randrscreen.cpp
+    randrgammainfo.cpp
     randrcrtc.cpp
     randroutput.cpp
     randrdisplay.cpp
