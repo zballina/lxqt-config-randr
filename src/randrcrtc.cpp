@@ -466,6 +466,7 @@ bool RandRCrtc::applyProposed()
     }
     
     // Set gamma
+    qDebug() << "[RandRCrtc::applyProposed] m_proposedBrightness" << m_proposedBrightness;
     set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
     m_currentBrightness = m_proposedBrightness;
 

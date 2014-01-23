@@ -462,6 +462,9 @@ void RandROutput::save(QSettings &config)
         config.setValue("Rotation", m_crtc->rotation());
     }
     config.setValue("RefreshRate", (double)m_crtc->refreshRate());
+    config.setValue("Brightness", (double)m_crtc->brightness());
+    config.setValue("Tracking", m_crtc->tracking());
+    config.setValue("VirtualRect", m_crtc->virtualRect());
     config.endGroup();
 }
 
