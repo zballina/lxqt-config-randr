@@ -404,32 +404,32 @@ bool RandRCrtc::applyProposed()
                         m_proposedRotation, outputs, m_connectedOutputs.count());*/
         }
     }
-    {
-        { // Set scale
-            int major, minor;
-            XRRQueryVersion (QX11Info::display(), &major, &minor);
-            if (major > 1 || (major == 1 && minor >= 3))
+
+    { // Set scale
+        int major, minor; // Chack XRandr version. Xrandr 1.3 needed.
+        XRRQueryVersion (QX11Info::display(), &major, &minor);
+        if (major > 1 || (major == 1 && minor >= 3))
+        {
+            int nparams = 0;
+            XFixed *params = NULL;
+            memset (&m_transform, '\0', sizeof (m_transform));
+            float width;
+            float height;
+            if(m_proposedTracking || !m_proposedVirtualModeEnabled)
+                width = height = 1.0;
+            else
             {
-                int nparams = 0;
-                XFixed *params = NULL;
-                memset (&m_transform, '\0', sizeof (m_transform));
-                float width;
-                float height;
-                if(m_proposedTracking || !m_proposedVirtualModeEnabled)
-                    width = height = 1.0;
-                else
-                {
-                    width=(float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
-                    height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
-                }
-                m_transform.matrix[0][0] = XDoubleToFixed (width);
-                m_transform.matrix[1][1] = XDoubleToFixed (height);
-                m_transform.matrix[2][2] = XDoubleToFixed (1.0);
-                XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
-                qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
+                width = (float)m_proposedVirtualRect.size().width() / (float)m_proposedRect.size().width();
+                height = (float)m_proposedVirtualRect.size().height() / (float)m_proposedRect.size().height();
             }
+            m_transform.matrix[0][0] = XDoubleToFixed (width);
+            m_transform.matrix[1][1] = XDoubleToFixed (height);
+            m_transform.matrix[2][2] = XDoubleToFixed (1.0);
+            XRRSetCrtcTransform (QX11Info::display(), m_id, &m_transform, m_filter, params, nparams);
+            qDebug() << "[RandRCrtc::applyProposed] scale width" << width << "height=" << height;
         }
     }
+
 
     RROutput *outputs = new RROutput[m_connectedOutputs.count()];
     for (int i = 0; i < m_connectedOutputs.count(); ++i)
@@ -442,7 +442,7 @@ bool RandRCrtc::applyProposed()
 
     delete[] outputs;
 
-    
+    // Set panning
     if(m_proposedVirtualModeEnabled)
     {
         /////////////////////////////////////
@@ -455,7 +455,7 @@ bool RandRCrtc::applyProposed()
         panning->track_left = panning->track_top = 0;
         panning->timestamp = RandR::timestamp;
         {
-        	Status s = XRRSetPanning (QX11Info::display(),m_screen->resources(), m_id, panning);
+        	Status s = XRRSetPanning (QX11Info::display(), m_screen->resources(), m_id, panning);
         	if (s == RRSetConfigSuccess)
         		qDebug() << "[RandRCrtc::applyProposed] Panning changed";
         	else
@@ -468,7 +468,10 @@ bool RandRCrtc::applyProposed()
     // Set gamma
     qDebug() << "[RandRCrtc::applyProposed] m_proposedBrightness" << m_proposedBrightness;
     set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
+    // Set gamma twice. There is a bug in Xrandr setting brightness when virtual size is changed
+    set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
     m_currentBrightness = m_proposedBrightness;
+    
 
     bool ret;
     if (s == RRSetConfigSuccess)
