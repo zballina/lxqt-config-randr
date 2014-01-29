@@ -432,6 +432,9 @@ void RandROutput::load(QSettings &config)
         m_proposedRotation = config.value("Rotation", (int) RandR::Rotate0).toInt();
     }
     m_proposedRate = config.value("RefreshRate", 0).toFloat();
+    m_proposedBrightness = config.value("Brightness", 0).toFloat();
+    m_proposedTracking = config.value("Tracking", false).toBool();
+    m_proposedVirtualRect = config.value("VirtualRect", QRect()).toRect();
     config.endGroup();
 }
 

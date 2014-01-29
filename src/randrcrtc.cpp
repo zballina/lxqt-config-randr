@@ -466,11 +466,17 @@ bool RandRCrtc::applyProposed()
     }
     
     // Set gamma
+    //Gamma is applied twice
     qDebug() << "[RandRCrtc::applyProposed] m_proposedBrightness" << m_proposedBrightness;
-    // Wait for set gamma. There is a bug in Xrandr setting brightness when virtual size is changed
+    // Wait for set gamma. Wait for Xrandr setting brightness when virtual size is changed
     sleep(3);
+    //XFlush(QX11Info::display());
+    //XSync(QX11Info::display(), False);
+    //Gamma is applied twice
+    set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
     set_gamma(QX11Info::display(), m_screen->resources(), m_id, m_proposedBrightness, red, blue, green);
     m_currentBrightness = m_proposedBrightness;
+    
     
 
     bool ret;

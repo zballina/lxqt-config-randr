@@ -141,7 +141,7 @@ set_gamma(Display *dpy, XRRScreenResources *res, RRCrtc crtc_id, float brightnes
 	float gammaGreen;
 	float gammaBlue;
 
-	qDebug() << "Appling brightnes " << brightness;
+	qDebug() << "[set_gamma] Appling brightness " << brightness;
 
 	//XRRCrtcInfo *info = XRRGetCrtcInfo(dpy, res, crtc_id);
 
