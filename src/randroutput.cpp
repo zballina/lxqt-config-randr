@@ -432,6 +432,10 @@ void RandROutput::load(QSettings &config)
         m_proposedRotation = config.value("Rotation", (int) RandR::Rotate0).toInt();
     }
     m_proposedRate = config.value("RefreshRate", 0).toFloat();
+    m_proposedBrightness = config.value("Brightness", 0).toFloat();
+    m_proposedTracking = config.value("Tracking", false).toBool();
+    m_proposedVirtualRect = config.value("VirtualRect", QRect()).toRect();
+    m_proposedVirtualModeEnabled = config.value("VirtualModeEnabled", false).toBool();
     config.endGroup();
 }
 
@@ -462,6 +466,10 @@ void RandROutput::save(QSettings &config)
         config.setValue("Rotation", m_crtc->rotation());
     }
     config.setValue("RefreshRate", (double)m_crtc->refreshRate());
+    config.setValue("Brightness", (double)m_crtc->brightness());
+    config.setValue("Tracking", m_crtc->tracking());
+    config.setValue("VirtualRect", m_crtc->virtualRect());
+    config.setValue("VirtualModeEnabled", m_crtc->virtualModeEnabled());
     config.endGroup();
 }
 

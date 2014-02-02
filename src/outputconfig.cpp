@@ -25,6 +25,7 @@
 #include "randrmode.h"
 #include "randrcrtc.h"
 #include <QtCore/QDebug>
+#include <QMessageBox>
 
 OutputConfig::OutputConfig(QWidget* parent, RandROutput* output, OutputConfigList preceding, bool unified)
     : QWidget(parent)
@@ -411,6 +412,14 @@ void OutputConfig::enableVirtualMode(int state)
     }
     else
     {
+        static bool msg_showed=false;
+        if(!msg_showed)
+        {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Virtual modes requies XRandr version 1.3 or better."));
+            msgBox.exec();
+            msg_showed=true;
+        }
         scaleComboBox->setEnabled(false);
         trackingCheckBox->setEnabled(false);
     }
