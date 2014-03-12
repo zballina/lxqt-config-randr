@@ -17,13 +17,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <QtGui/QGraphicsScene>
+
+#include "outputgraphicsitem.h"
 #include "layoutmanager.h"
 #include "randr.h"
 #include "randrscreen.h"
 #include "randroutput.h"
-#include "outputgraphicsitem.h"
 
-#include <QtGui/QGraphicsScene>
 #include <cmath>
 #include <math.h>
 
